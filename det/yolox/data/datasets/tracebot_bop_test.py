@@ -1,5 +1,5 @@
-import logging
 import hashlib
+import logging
 import os
 import os.path as osp
 import sys
@@ -9,12 +9,10 @@ PROJ_ROOT = osp.normpath(osp.join(cur_dir, "../../../.."))
 sys.path.insert(0, PROJ_ROOT)
 import time
 from collections import OrderedDict
-
 import mmcv
 import numpy as np
 from tqdm import tqdm
 from transforms3d.quaternions import mat2quat, quat2mat
-
 import ref
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.structures import BoxMode
@@ -27,7 +25,9 @@ logger = logging.getLogger(__name__)
 DATASETS_ROOT = osp.normpath(osp.join(PROJ_ROOT, "datasets"))
 
 
-class ICBIN_PBR_Dataset:
+class TRACEBOT_BOP_TEST_Dataset:
+    """tracebot bop test."""
+
     def __init__(self, data_cfg):
         """
         Set with_depth and with_masks default to True,
@@ -37,33 +37,35 @@ class ICBIN_PBR_Dataset:
         self.name = data_cfg["name"]
         self.data_cfg = data_cfg
 
-        self.objs = data_cfg["objs"]  # selected objs
+        self.objs = data_cfg["objs"]  # selected objects
+        # all classes are self.objs, but this enables us to evaluate on selected objs
+        self.select_objs = data_cfg.get("select_objs", self.objs)
 
-        self.dataset_root = data_cfg.get("dataset_root", osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/train_pbr"))
-        assert osp.exists(self.dataset_root), self.dataset_root
-        self.xyz_root = data_cfg.get("xyz_root", osp.join(self.dataset_root, "xyz_crop"))
-        self.models_root = data_cfg["models_root"]  # BOP_DATASETS/icbin/models_cad
+        self.ann_file = data_cfg["ann_file"]  # json file with scene_id and im_id items
+
+        self.dataset_root = data_cfg["dataset_root"]  # BOP_DATASETS/tracebot/test
+        self.models_root = data_cfg["models_root"]  # BOP_DATASETS/tracebot/models
         self.scale_to_meter = data_cfg["scale_to_meter"]  # 0.001
 
-        self.with_masks = data_cfg["with_masks"]
-        self.with_depth = data_cfg["with_depth"]
+        self.with_masks = data_cfg["with_masks"]  # True (load masks but may not use it)
+        self.with_depth = data_cfg["with_depth"]  # True (load depth path here, but may not use it)
 
-        self.height = data_cfg["height"]
-        self.width = data_cfg["width"]
+        self.height = data_cfg["height"]  # 480
+        self.width = data_cfg["width"]  # 640
 
-        self.num_to_load = data_cfg["num_to_load"]  # -1
-        self.filter_invalid = data_cfg.get("filter_invalid", True)
-        self.use_cache = data_cfg.get("use_cache", True)
         self.cache_dir = data_cfg.get("cache_dir", osp.join(PROJ_ROOT, ".cache"))  # .cache
+        self.use_cache = data_cfg.get("use_cache", True)
+        self.num_to_load = data_cfg["num_to_load"]  # -1
+        self.filter_invalid = data_cfg["filter_invalid"]
+        ##################################################
 
         # NOTE: careful! Only the selected objects
-        self.cat_ids = [cat_id for cat_id, obj_name in ref.icbin.id2obj.items() if obj_name in self.objs]
-        # map selected objs to [0, num_objs)
+        self.cat_ids = [cat_id for cat_id, obj_name in ref.tracebot.id2obj.items() if obj_name in self.objs]
+        # map selected objs to [0, num_objs-1]
         self.cat2label = {v: i for i, v in enumerate(self.cat_ids)}  # id_map
         self.label2cat = {label: cat for cat, label in self.cat2label.items()}
         self.obj2label = OrderedDict((obj, obj_id) for obj_id, obj in enumerate(self.objs))
-
-        self.scenes = [f"{i:06d}" for i in range(50)]
+        ##########################################################
 
     def __call__(self):
         """Load light-weight instance annotations of all images into a list of
@@ -97,48 +99,60 @@ class ICBIN_PBR_Dataset:
         t_start = time.perf_counter()
 
         logger.info("loading dataset dicts: {}".format(self.name))
-
-        dataset_dicts = []
         self.num_instances_without_valid_segmentation = 0
         self.num_instances_without_valid_box = 0
-        # it is slow because of loading and converting masks to rle
+        dataset_dicts = []  # ######################################################
+        im_id_global = 0
 
-        for scene in tqdm(self.scenes):
-            scene_id = int(scene)
-            scene_root = osp.join(self.dataset_root, scene)
+        if True:
+            targets = mmcv.load(self.ann_file)
+            scene_im_ids = [(item["scene_id"], item["im_id"]) for item in targets]
+            scene_im_ids = sorted(list(set(scene_im_ids)))
 
-            gt_dict = mmcv.load(osp.join(scene_root, "scene_gt.json"))
-            gt_info_dict = mmcv.load(osp.join(scene_root, "scene_gt_info.json"))
-            cam_dict = mmcv.load(osp.join(scene_root, "scene_camera.json"))
+            # load infos for each scene
+            gt_dicts = {}
+            gt_info_dicts = {}
+            cam_dicts = {}
+            for scene_id, im_id in scene_im_ids:
+                scene_root = osp.join(self.dataset_root, f"{scene_id:06d}")
+                if scene_id not in gt_dicts:
+                    gt_dicts[scene_id] = mmcv.load(osp.join(scene_root, "scene_gt.json"))
+                if scene_id not in gt_info_dicts:
+                    gt_info_dicts[scene_id] = mmcv.load(
+                        osp.join(scene_root, "scene_gt_info.json")
+                    )  # bbox_obj, bbox_visib
+                if scene_id not in cam_dicts:
+                    cam_dicts[scene_id] = mmcv.load(osp.join(scene_root, "scene_camera.json"))
 
-            for str_im_id in tqdm(gt_dict, postfix=f"{scene_id}"):
-                int_im_id = int(str_im_id)
-                rgb_path = osp.join(scene_root, "rgb/{:06d}.jpg").format(int_im_id)
+            for scene_id, im_id in tqdm(scene_im_ids):
+                str_im_id = str(im_id)
+                scene_root = osp.join(self.dataset_root, f"{scene_id:06d}")
+                rgb_path = osp.join(scene_root, "rgb/{:06d}.jpg").format(im_id)
                 assert osp.exists(rgb_path), rgb_path
 
-                depth_path = osp.join(scene_root, "depth/{:06d}.png".format(int_im_id))
+                depth_path = osp.join(scene_root, "depth/{:06d}.png".format(im_id))
 
-                scene_im_id = f"{scene_id}/{int_im_id}"
+                scene_id = int(rgb_path.split("/")[-3])
 
-                K = np.array(cam_dict[str_im_id]["cam_K"], dtype=np.float32).reshape(3, 3)
-                depth_factor = 1000.0 / cam_dict[str_im_id]["depth_scale"]  # 10000
-
+                cam = np.array(cam_dicts[scene_id][str_im_id]["cam_K"], dtype=np.float32).reshape(3, 3)
+                depth_factor = 1000.0 / cam_dicts[scene_id][str_im_id]["depth_scale"]
                 record = {
                     "dataset_name": self.name,
                     "file_name": osp.relpath(rgb_path, PROJ_ROOT),
                     "depth_file": osp.relpath(depth_path, PROJ_ROOT),
+                    "depth_factor": depth_factor,
                     "height": self.height,
                     "width": self.width,
-                    "image_id": int_im_id,
-                    "scene_im_id": scene_im_id,  # for evaluation
-                    "cam": K,
-                    "depth_factor": depth_factor,
-                    "img_type": "syn_pbr",  # NOTE: has background
+                    "image_id": im_id_global,  # unique image_id in the dataset, for coco evaluation
+                    "scene_im_id": "{}/{}".format(scene_id, im_id),  # for evaluation
+                    "cam": cam,
+                    "img_type": "real",
                 }
+                im_id_global += 1
                 insts = []
-                for anno_i, anno in enumerate(gt_dict[str_im_id]):
+                for anno_i, anno in enumerate(gt_dicts[scene_id][str_im_id]):
                     obj_id = anno["obj_id"]
-                    if obj_id not in self.cat_ids:
+                    if ref.tracebot.id2obj[obj_id] not in self.select_objs:
                         continue
                     cur_label = self.cat2label[obj_id]  # 0-based label
                     R = np.array(anno["cam_R_m2c"], dtype="float32").reshape(3, 3)
@@ -149,50 +163,52 @@ class ICBIN_PBR_Dataset:
                     proj = (record["cam"] @ t.T).T
                     proj = proj[:2] / proj[2]
 
-                    bbox_visib = gt_info_dict[str_im_id][anno_i]["bbox_visib"]
-                    bbox_obj = gt_info_dict[str_im_id][anno_i]["bbox_obj"]
+                    bbox_visib = gt_info_dicts[scene_id][str_im_id][anno_i]["bbox_visib"]
+                    bbox_obj = gt_info_dicts[scene_id][str_im_id][anno_i]["bbox_obj"]
                     x1, y1, w, h = bbox_visib
                     if self.filter_invalid:
                         if h <= 1 or w <= 1:
                             self.num_instances_without_valid_box += 1
                             continue
 
-                    mask_file = osp.join(scene_root, "mask/{:06d}_{:06d}.png".format(int_im_id, anno_i))
+                    mask_file = osp.join(
+                        scene_root,
+                        "mask/{:06d}_{:06d}.png".format(im_id, anno_i),
+                    )
                     mask_visib_file = osp.join(
                         scene_root,
-                        "mask_visib/{:06d}_{:06d}.png".format(int_im_id, anno_i),
+                        "mask_visib/{:06d}_{:06d}.png".format(im_id, anno_i),
                     )
                     assert osp.exists(mask_file), mask_file
                     assert osp.exists(mask_visib_file), mask_visib_file
-                    # load mask visib  TODO: load both mask_visib and mask_full
+                    # load mask visib
                     mask_single = mmcv.imread(mask_visib_file, "unchanged")
                     area = mask_single.sum()
-                    if area < 30:  # filter out too small or nearly invisible instances
+                    if area < 3:  # filter out too small or nearly invisible instances
                         self.num_instances_without_valid_segmentation += 1
                         continue
-                    visib_fract = gt_info_dict[str_im_id][anno_i].get("visib_fract", 1.0)
                     mask_rle = binary_mask_to_rle(mask_single, compressed=True)
 
-                    xyz_path = osp.join(
-                        self.xyz_root,
-                        f"{scene_id:06d}/{int_im_id:06d}_{anno_i:06d}-xyz.pkl",
-                    )
+                    # load mask full
+                    mask_full = mmcv.imread(mask_file, "unchanged")
+                    mask_full = mask_full.astype("bool")
+                    mask_full_rle = binary_mask_to_rle(mask_full, compressed=True)
 
                     inst = {
                         "category_id": cur_label,  # 0-based label
-                        "bbox": bbox_obj,
+                        "bbox": bbox_obj,  # TODO: load both bbox_obj and bbox_visib
                         "bbox_mode": BoxMode.XYWH_ABS,
                         "pose": pose,
                         "quat": quat,
                         "trans": t,
                         "centroid_2d": proj,  # absolute (cx, cy)
                         "segmentation": mask_rle,
-                        "mask_full": mask_file,  # TODO: load as mask_full, rle
-                        "visib_fract": visib_fract,
-                        "xyz_path": xyz_path,
+                        "mask_full": mask_full_rle,  # TODO: load as mask_full, rle
                     }
+
                     model_info = self.models_info[str(obj_id)]
                     inst["model_info"] = model_info
+                    # TODO: using full mask and full xyz
                     for key in ["bbox3d_and_center"]:
                         inst[key] = self.models[cur_label][key]
                     insts.append(inst)
@@ -213,7 +229,7 @@ class ICBIN_PBR_Dataset:
                 "Filtered out {} instances without valid box. "
                 "There might be issues in your dataset generation process.".format(self.num_instances_without_valid_box)
             )
-        ##########################
+        ##########################################################################
         if self.num_to_load > 0:
             self.num_to_load = min(int(self.num_to_load), len(dataset_dicts))
             dataset_dicts = dataset_dicts[: self.num_to_load]
@@ -234,7 +250,7 @@ class ICBIN_PBR_Dataset:
     @lazy_property
     def models(self):
         """Load models into a list."""
-        cache_path = osp.join(self.models_root, "models_{}.pkl".format("_".join(self.objs)))
+        cache_path = osp.join(self.models_root, f"models_{self.name}.pkl")
         if osp.exists(cache_path) and self.use_cache:
             # dprint("{}: load cached object models from {}".format(self.name, cache_path))
             return mmcv.load(cache_path)
@@ -242,19 +258,20 @@ class ICBIN_PBR_Dataset:
         models = []
         for obj_name in self.objs:
             model = inout.load_ply(
-                osp.join(self.models_root, f"obj_{ref.icbin.obj2id[obj_name]:06d}.ply"),
+                osp.join(
+                    self.models_root,
+                    f"obj_{ref.tracebot.obj2id[obj_name]:06d}.ply",
+                ),
                 vertex_scale=self.scale_to_meter,
             )
             # NOTE: the bbox3d_and_center is not obtained from centered vertices
             # for BOP models, not a big problem since they had been centered
             model["bbox3d_and_center"] = misc.get_bbox3d_and_center(model["pts"])
+
             models.append(model)
         logger.info("cache models to {}".format(cache_path))
         mmcv.dump(models, cache_path, protocol=4)
         return models
-
-    def __len__(self):
-        return self.num_to_load
 
     def image_aspect_ratio(self):
         return self.width / self.height  # 4/3
@@ -263,9 +280,8 @@ class ICBIN_PBR_Dataset:
 ########### register datasets ############################################################
 
 
-def get_icbin_metadata(obj_names, ref_key):
+def get_tracebot_metadata(obj_names, ref_key):
     """task specific metadata."""
-
     data_ref = ref.__dict__[ref_key]
 
     cur_sym_infos = {}  # label based key
@@ -285,56 +301,52 @@ def get_icbin_metadata(obj_names, ref_key):
     return meta
 
 
-icbin_model_root = "BOP_DATASETS/icbin/models_cad/"
 ################################################################################
 
-
-SPLITS_ICBIN_PBR = dict(
-    icbin_pbr_train=dict(
-        name="icbin_pbr_train",
-        objs=ref.icbin.objects,  # selected objects
-        dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/train_pbr"),
-        models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/models"),
-        xyz_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/train_pbr/xyz_crop"),
+SPLITS_TRACEBOT = dict(
+    tracebot_bop_test=dict(
+        name="tracebot_bop_test",
+        dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/test"),
+        models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/models"),
+        objs=ref.tracebot.objects,  # selected objects
+        ann_file=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/test_targets_bop19.json"),
         scale_to_meter=0.001,
         with_masks=True,  # (load masks but may not use it)
         with_depth=True,  # (load depth path here, but may not use it)
-        height=480,
-        width=640,
+        height=720,
+        width=1280,
+        cache_dir=osp.join(PROJ_ROOT, ".cache"),
         use_cache=True,
         num_to_load=-1,
         filter_invalid=False,
-        ref_key="icbin",
-    ),
+        ref_key="tracebot",
+    )
 )
 
-# single obj splits
-for obj in ref.icbin.objects:
-    for split in ["train"]:
-        name = "icbin_pbr_{}_{}".format(obj, split)
-        if split in ["train"]:
-            filter_invalid = True
-        elif split in ["test"]:
-            filter_invalid = False
-        else:
-            raise ValueError("{}".format(split))
-        if name not in SPLITS_ICBIN_PBR:
-            SPLITS_ICBIN_PBR[name] = dict(
-                name=name,
-                objs=[obj],  # only this obj
-                dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/train_pbr"),
-                models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/models"),
-                xyz_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/icbin/train_pbr/xyz_crop"),
-                scale_to_meter=0.001,
-                with_masks=True,  # (load masks but may not use it)
-                with_depth=True,  # (load depth path here, but may not use it)
-                height=480,
-                width=640,
-                use_cache=True,
-                num_to_load=-1,
-                filter_invalid=filter_invalid,
-                ref_key="icbin",
-            )
+
+# single objs (num_class is from all objs)
+for obj in ref.tracebot.objects:
+    name = "tracebot_bop_{}_test".format(obj)
+    select_objs = [obj]
+    if name not in SPLITS_TRACEBOT:
+        SPLITS_TRACEBOT[name] = dict(
+            name=name,
+            dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/test"),
+            models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/models"),
+            objs=[obj],  # only this obj
+            select_objs=select_objs,  # selected objects
+            ann_file=osp.join(DATASETS_ROOT, "BOP_DATASETS/tracebot/test_targets_bop19.json"),
+            scale_to_meter=0.001,
+            with_masks=True,  # (load masks but may not use it)
+            with_depth=True,  # (load depth path here, but may not use it)
+            height=720,
+            width=1280,
+            cache_dir=osp.join(PROJ_ROOT, ".cache"),
+            use_cache=True,
+            num_to_load=-1,
+            filter_invalid=False,
+            ref_key="tracebot",
+        )
 
 
 def register_with_name_cfg(name, data_cfg=None):
@@ -347,25 +359,25 @@ def register_with_name_cfg(name, data_cfg=None):
             data_cfg can be set in cfg.DATA_CFG.name
     """
     dprint("register dataset: {}".format(name))
-    if name in SPLITS_ICBIN_PBR:
-        used_cfg = SPLITS_ICBIN_PBR[name]
+    if name in SPLITS_TRACEBOT:
+        used_cfg = SPLITS_TRACEBOT[name]
     else:
         assert data_cfg is not None, f"dataset name {name} is not registered"
         used_cfg = data_cfg
-    DatasetCatalog.register(name, ICBIN_PBR_Dataset(used_cfg))
+    DatasetCatalog.register(name, TRACEBOT_BOP_TEST_Dataset(used_cfg))
     # something like eval_types
     MetadataCatalog.get(name).set(
-        id="icbin",  # NOTE: for pvnet to determine module
+        id="tracebot",  # NOTE: for pvnet to determine module
         ref_key=used_cfg["ref_key"],
         objs=used_cfg["objs"],
         eval_error_types=["ad", "rete", "proj"],
         evaluator_type="bop",
-        **get_icbin_metadata(obj_names=used_cfg["objs"], ref_key=used_cfg["ref_key"]),
+        **get_tracebot_metadata(obj_names=used_cfg["objs"], ref_key=used_cfg["ref_key"]),
     )
 
 
 def get_available_datasets():
-    return list(SPLITS_ICBIN_PBR.keys())
+    return list(SPLITS_TRACEBOT.keys())
 
 
 #### tests ###############################################
@@ -385,7 +397,7 @@ def test_vis():
     os.makedirs(dirname, exist_ok=True)
     for d in dicts:
         img = read_image_mmcv(d["file_name"], format="BGR")
-        depth = mmcv.imread(d["depth_file"], "unchanged") / 10000.0
+        depth = mmcv.imread(d["depth_file"], "unchanged") / d["depth_factor"]
 
         imH, imW = img.shape[:2]
         annos = d["annotations"]
@@ -405,77 +417,38 @@ def test_vis():
         kpts_2d = [misc.project_pts(kpt3d, K, R, t) for kpt3d, R, t in zip(kpts_3d_list, Rs, transes)]
         # # TODO: visualize pose and keypoints
         labels = [objs[cat_id] for cat_id in cat_ids]
-        for _i in range(len(annos)):
-            img_vis = vis_image_mask_bbox_cv2(
-                img,
-                masks[_i : _i + 1],
-                bboxes=bboxes_xyxy[_i : _i + 1],
-                labels=labels[_i : _i + 1],
-            )
-            img_vis_kpts2d = misc.draw_projected_box3d(img_vis.copy(), kpts_2d[_i])
-            xyz_path = annos[_i]["xyz_path"]
-            xyz_info = mmcv.load(xyz_path)
-            x1, y1, x2, y2 = xyz_info["xyxy"]
-            xyz_crop = xyz_info["xyz_crop"].astype(np.float32)
-            xyz = np.zeros((imH, imW, 3), dtype=np.float32)
-            xyz[y1 : y2 + 1, x1 : x2 + 1, :] = xyz_crop
-            xyz_show = get_emb_show(xyz)
-            xyz_crop_show = get_emb_show(xyz_crop)
-            img_xyz = img.copy() / 255.0
-            mask_xyz = ((xyz[:, :, 0] != 0) | (xyz[:, :, 1] != 0) | (xyz[:, :, 2] != 0)).astype("uint8")
-            fg_idx = np.where(mask_xyz != 0)
-            img_xyz[fg_idx[0], fg_idx[1], :] = xyz_show[fg_idx[0], fg_idx[1], :3]
-            img_xyz_crop = img_xyz[y1 : y2 + 1, x1 : x2 + 1, :]
-            img_vis_crop = img_vis[y1 : y2 + 1, x1 : x2 + 1, :]
-            # diff mask
-            diff_mask_xyz = np.abs(masks[_i] - mask_xyz)[y1 : y2 + 1, x1 : x2 + 1]
-
-            grid_show(
-                [
-                    img[:, :, [2, 1, 0]],
-                    img_vis[:, :, [2, 1, 0]],
-                    img_vis_kpts2d[:, :, [2, 1, 0]],
-                    depth,
-                    # xyz_show,
-                    diff_mask_xyz,
-                    xyz_crop_show,
-                    img_xyz[:, :, [2, 1, 0]],
-                    img_xyz_crop[:, :, [2, 1, 0]],
-                    img_vis_crop,
-                ],
-                [
-                    "img",
-                    "vis_img",
-                    "img_vis_kpts2d",
-                    "depth",
-                    "diff_mask_xyz",
-                    "xyz_crop_show",
-                    "img_xyz",
-                    "img_xyz_crop",
-                    "img_vis_crop",
-                ],
-                row=3,
-                col=3,
-            )
+        # img_vis = vis_image_bboxes_cv2(img, bboxes=bboxes_xyxy, labels=labels)
+        img_vis = vis_image_mask_bbox_cv2(img, masks, bboxes=bboxes_xyxy, labels=labels)
+        img_vis_kpts2d = img.copy()
+        for anno_i in range(len(annos)):
+            img_vis_kpts2d = misc.draw_projected_box3d(img_vis_kpts2d, kpts_2d[anno_i])
+        grid_show(
+            [
+                img[:, :, [2, 1, 0]],
+                img_vis[:, :, [2, 1, 0]],
+                img_vis_kpts2d[:, :, [2, 1, 0]],
+                depth,
+            ],
+            [f"img:{d['file_name']}", "vis_img", "img_vis_kpts2d", "depth"],
+            row=2,
+            col=2,
+        )
 
 
 if __name__ == "__main__":
     """Test the  dataset loader.
 
     Usage:
-        python -m this_module dataset_name
+        python -m core.datasets.tracebot_bop_test dataset_name
     """
     from lib.vis_utils.image import grid_show
     from lib.utils.setup_logger import setup_my_logger
-
     import detectron2.data.datasets  # noqa # add pre-defined metadata
-    from lib.vis_utils.image import vis_image_mask_bbox_cv2
-    from core.utils.utils import get_emb_show
     from core.utils.data_utils import read_image_mmcv
+    from lib.vis_utils.image import vis_image_mask_bbox_cv2
 
     print("sys.argv:", sys.argv)
     logger = setup_my_logger(name="core")
     register_with_name_cfg(sys.argv[1])
     print("dataset catalog: ", DatasetCatalog.list())
-
     test_vis()

@@ -315,7 +315,7 @@ class GDRN_Online_DatasetFromList(Base_DatasetFromList):
         cfg = self.cfg
         net_cfg = cfg.MODEL.POSE_NET
         g_head_cfg = net_cfg.GEO_HEAD
-
+        
         dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
 
         dataset_name = dataset_dict["dataset_name"]
@@ -767,3 +767,4 @@ class GDRN_Online_DatasetFromList(Base_DatasetFromList):
                 idx = self._rand_another(idx)
                 continue
             return processed_data
+            

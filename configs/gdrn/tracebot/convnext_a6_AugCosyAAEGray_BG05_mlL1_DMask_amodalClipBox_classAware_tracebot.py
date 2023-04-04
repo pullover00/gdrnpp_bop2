@@ -1,6 +1,7 @@
+# about 3 days
 _base_ = ["../../_base_/gdrn_base.py"]
 
-OUTPUT_DIR = "output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless"
+OUTPUT_DIR = "output/gdrn/tracebot/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tracebot"
 INPUT = dict(
     DZI_PAD_SCALE=1.5,
     TRUNCATE_FG=True,
@@ -33,7 +34,8 @@ INPUT = dict(
 
 SOLVER = dict(
     IMS_PER_BATCH=48,
-    TOTAL_EPOCHS=40,  # 30
+    TOTAL_EPOCHS=40,  # 10
+    # 40 epochs original
     LR_SCHEDULER_NAME="flat_and_anneal",
     ANNEAL_METHOD="cosine",  # "cosine"
     ANNEAL_POINT=0.72,
@@ -44,9 +46,9 @@ SOLVER = dict(
 )
 
 DATASETS = dict(
-    TRAIN=("tless_train_pbr"),
-    TEST=("tless_bop_test_primesense",)
-    DET_FILES_TEST=("datasets/BOP_DATASETS/tless/test/test_bboxes/yolox_x_640_tless_real_pbr_tless_bop_test.json",),
+    TRAIN = ["tracebot_train_pbr"],
+    TEST = ["tracebot_bop_test"],
+    DET_FILES_TEST=("datasets/BOP_DATASETS/tracebot/test/test_bboxes/yolox_x_640_tracebot_test.json",),
     DET_TOPK_PER_OBJ=100,
 )
 
@@ -64,7 +66,7 @@ MODEL = dict(
     POSE_NET=dict(
         NAME="GDRN_double_mask",
         XYZ_ONLINE=True,
-        NUM_CLASSES=30,
+        NUM_CLASSES=8,
         BACKBONE=dict(
             FREEZE=False,
             PRETRAINED="timm",
@@ -126,10 +128,10 @@ MODEL = dict(
 )
 
 VAL = dict(
-    DATASET_NAME="tless",
+    DATASET_NAME="tracebot",
     SCRIPT_PATH="lib/pysixd/scripts/eval_pose_results_more.py",
     TARGETS_FILENAME="test_targets_bop19.json",
-    ERROR_TYPES="mspd,mssd,vsd,ad,reS,teS",
+    ERROR_TYPES="vsd,mspd,mssd",
     #RENDERER_TYPE="cpp",  # cpp, python, egl
     RENDERER_TYPE="python",  # cpp, python, egl
     SPLIT="test",
