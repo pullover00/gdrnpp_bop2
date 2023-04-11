@@ -60,6 +60,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
-RUN mkdir gdrnpp_bop2022
-WORKDIR /gdrnpp_bop2022
+RUN mkdir gdrn
+WORKDIR /gdrn
 
