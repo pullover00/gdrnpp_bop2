@@ -2,6 +2,15 @@
 
 This repo provides code and models for GDRNPP_BOP2022, **winner (most of the awards) of the BOP Challenge 2022 at ECCV'22 [[slides](http://cmp.felk.cvut.cz/sixd/workshop_2022/slides/bop_challenge_2022_results.pdf)]**.
 
+## Docker
+* change the path where where the git clone folder is located on your PC in docker/docker_run.sh
+* `cd docker`
+* `bash docker_build.sh`
+* `bash docker_run.sh`
+* `bash scripts/compile_all.sh`
+* in another terminal `xhost +`
+* to open a new shell in the gdrnv0 container use `docker exec -it gdrnv0 /bin/bash`
+
 ## Path Setting
 
 ### Dataset Preparation
