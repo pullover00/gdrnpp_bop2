@@ -73,8 +73,23 @@ class GdrnPredictor():
         self.objs_dir = path_to_obj_models
 
         #set your trained object names
-        self.objs = {1:'class_name_1',
-                     2:'class_name_2'}
+        self.objs = {
+                    1: "ape",
+                    #  2: 'benchvise',
+                    #  3: 'bowl',
+                    #  4: 'camera',
+                    5: "can",
+                    6: "cat",
+                    #  7: 'cup',
+                    8: "driller",
+                    9: "duck",
+                    10: "eggbox",
+                    11: "glue",
+                    12: "holepuncher",
+                    #  13: 'iron',
+                    #  14: 'lamp',
+                    #  15: 'phone'
+                }
 
         self.cls_names = [i for i in self.objs.values()]
         self.obj_ids = [i for i in self.objs.keys()]
@@ -373,6 +388,9 @@ class GdrnPredictor():
             roi_infos[_key] = []
 
         for inst_i, inst_infos in enumerate(dataset_dict["annotations"]):
+            print(inst_infos["category_id"])
+
+        for inst_i, inst_infos in enumerate(dataset_dict["annotations"]):
             # inherent image-level infos
             roi_infos["im_H"].append(im_H)
             roi_infos["im_W"].append(im_W)
@@ -481,10 +499,10 @@ class GdrnPredictor():
 
         cur_extents = {}
         idx = 0
-        for i, obj_name in self.objs.items():
-            model_path = os.path.join(self.objs_dir, f"obj_{i:06d}.ply")
+        for obj_key in self.objs.keys():
+            model_path = os.path.join(self.objs_dir, f"obj_{obj_key:06d}.ply")
             model = inout.load_ply(model_path, vertex_scale=self.args.vertex_scale)
-            self.obj_models[i] = model
+            self.obj_models[obj_key] = model
             pts = model["pts"]
             xmin, xmax = np.amin(pts[:, 0]), np.amax(pts[:, 0])
             ymin, ymax = np.amin(pts[:, 1]), np.amax(pts[:, 1])
@@ -585,6 +603,7 @@ class GdrnPredictor():
 
         # for crop and resize
         bs = batch["roi_cls"].shape[0]
+        print(bs)
         tensor_kwargs = {"dtype": torch.float32, "device": "cuda"}
         rois_xy0 = batch["roi_center"] - batch["scale"].view(bs, -1) / 2  # bx2
         rois_xy1 = batch["roi_center"] + batch["scale"].view(bs, -1) / 2  # bx2
@@ -616,7 +635,7 @@ class GdrnPredictor():
             R = batch["cur_res"][i]["R"]
             t = batch["cur_res"][i]["t"]
             # pose_est = np.hstack([R, t.reshape(3, 1)])
-            proj_pts_est = misc.project_pts(self.obj_models[i+1]["pts"], self.cam, R, t)
+            proj_pts_est = misc.project_pts(self.obj_models[8]["pts"], self.cam, R, t)
             mask_pose_est = misc.points2d_to_mask(proj_pts_est, im_H, im_W)
             image_mask_pose_est = vis_image_mask_cv2(image, mask_pose_est, color="yellow" if i == 0 else "blue")
             image_mask_pose_est = vis_image_bboxes_cv2(
@@ -626,5 +645,5 @@ class GdrnPredictor():
             )
             vis_dict[f"im_{i}_mask_pose_est"] = image_mask_pose_est[:, :, ::-1]
         show_ims = np.hstack([cv2.cvtColor(_v, cv2.COLOR_BGR2RGB) for _k, _v in vis_dict.items()])
-        cv2.imshow('Main', show_ims)
+        cv2.imwrite('result.jpg', show_ims)
         cv2.waitKey(0)

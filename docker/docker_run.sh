@@ -5,5 +5,5 @@ docker run \
 --gpus all \
 -it \
 --shm-size=8gb --env="DISPLAY" \
---volume="/home/hoenig/BOP/GDRNet:/gdrnpp" \
+--volume="/home/hoenig/BOP/gdrnpp_bop2022:/gdrnpp" \
 --name=gdrnppv0 gdrnpp

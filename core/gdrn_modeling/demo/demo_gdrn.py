@@ -43,7 +43,7 @@ def get_image_list(rgb_images_path, depth_images_path=None):
 
 
 if __name__ == "__main__":
-    image_paths = get_image_list(osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/test/000001/rgb"), osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/test/000001/depth"))
+    image_paths = get_image_list(osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/test/000002/rgb"), osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/test/000002/depth"))
     yolo_predictor = YoloPredictor(
                        exp_name="yolox-x",
                        config_file_path=osp.join(PROJ_ROOT,"configs/yolox/bop_pbr/yolox_x_640_augCozyAAEhsv_ranger_30_epochs_lmo_pbr_lmo_bop_test.py"),
@@ -63,6 +63,7 @@ if __name__ == "__main__":
         if depth_img is not None:
             depth_img = cv2.imread(depth_img, 0)
         outputs = yolo_predictor.inference(image=rgb_img)
+        print(outputs)
         data_dict = gdrn_predictor.preprocessing(outputs=outputs, image=rgb_img, depth_img=depth_img)
         out_dict = gdrn_predictor.inference(data_dict)
         poses = gdrn_predictor.postprocessing(data_dict, out_dict)
