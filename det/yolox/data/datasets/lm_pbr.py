@@ -298,9 +298,11 @@ def get_lm_metadata(obj_names, ref_key):
 LM_13_OBJECTS = [
     "ape",
     "benchvise",
+    "bowl",
     "camera",
     "can",
     "cat",
+    "cup",
     "driller",
     "duck",
     "eggbox",

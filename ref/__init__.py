@@ -1,1 +1,1 @@
-from . import lmo_full, ycbv, hb, hb_bop19, tudl, tless, icbin, itodd, lm_full, tracebot
+from . import lmo_full, ycbv, hb, hb_bop19, tudl, tless, icbin, itodd, lm_full, tracebot, lmo_full, lmo_random_texture_full, lmo_random_texture_all_full, lmo_random_texture_no_bump_full, lmo_random_texture_no_displacement_full, ycbv_random_texture, lmo_3r_full, lmo_5r_full, lmo_3r_1o_full, lmo_5r_1o_full

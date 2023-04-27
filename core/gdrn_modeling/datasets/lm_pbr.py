@@ -187,7 +187,7 @@ class LM_PBR_Dataset:
                         self.xyz_root,
                         f"{scene_id:06d}/{int_im_id:06d}_{anno_i:06d}-xyz.pkl",
                     )
-                    assert osp.exists(xyz_path), xyz_path
+                    #assert osp.exists(xyz_path), xyz_path
                     inst = {
                         "category_id": cur_label,  # 0-based label
                         "bbox": bbox_visib,

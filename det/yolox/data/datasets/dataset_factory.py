@@ -4,6 +4,7 @@ import mmcv
 from detectron2.data import DatasetCatalog
 from . import (
     lm_pbr,
+    lm_bop_test,
     lmo_bop_test,
     ycbv_pbr,
     ycbv_d2,
@@ -24,6 +25,10 @@ from . import (
     itodd_bop_test,
     tracebot_pbr,
     tracebot_bop_test,
+    lmo_pbr_random_texture,
+    lmo_pbr_random_texture_all,
+    lmo_pbr_random_texture_no_bump,
+    lmo_pbr_random_texture_no_displacement,
 )  # noqa
 
 cur_dir = osp.dirname(osp.abspath(__file__))
@@ -37,6 +42,7 @@ __all__ = [
 ]
 _DSET_MOD_NAMES = [
     "lm_pbr",
+    "lm_bop_test",
     "lmo_bop_test",
     "ycbv_pbr",
     "ycbv_d2",
@@ -57,6 +63,10 @@ _DSET_MOD_NAMES = [
     "itodd_bop_test",
     "tracebot_pbr",
     "tracebot_bop_test",
+    "lmo_pbr_random_texture",
+    "lmo_pbr_random_texture_all",
+    "lmo_pbr_random_texture_no_bump",
+    "lmo_pbr_random_texture_no_displacement",
 ]
 
 logger = logging.getLogger(__name__)

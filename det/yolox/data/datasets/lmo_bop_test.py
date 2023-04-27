@@ -329,7 +329,7 @@ SPLITS_LMO = dict(
         num_to_load=-1,
         filter_invalid=False,
         ref_key="lmo_full",
-    ),
+    )
 )
 
 # single obj splits for lmo bop test

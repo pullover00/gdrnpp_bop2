@@ -6,6 +6,7 @@ from core.gdrn_modeling.datasets import (
     lm_pbr,
     lmo_bop_test,
     ycbv_pbr,
+    ycbv_pbr_random_texture,
     ycbv_d2,
     ycbv_bop_test,
     hb_pbr,
@@ -22,6 +23,14 @@ from core.gdrn_modeling.datasets import (
     itodd_bop_test,
     tracebot_pbr,
     tracebot_bop_test,
+    lmo_pbr_random_texture,
+    lmo_pbr_random_texture_all,
+    lmo_pbr_random_texture_no_bump,
+    lmo_pbr_random_texture_no_displacement,
+    lmo_3r_pbr,
+    lmo_3r_1o_pbr,
+    lmo_5r_pbr,
+    lmo_5r_1o_pbr
 )  # noqa
 
 cur_dir = osp.dirname(osp.abspath(__file__))
@@ -37,6 +46,7 @@ _DSET_MOD_NAMES = [
     "lm_pbr",
     "lmo_bop_test",
     "ycbv_pbr",
+    "ycbv_pbr_random_texture",
     "ycbv_d2",
     "ycbv_bop_test",
     "hb_pbr",
@@ -53,6 +63,14 @@ _DSET_MOD_NAMES = [
     "itodd_bop_test",
     "tracebot_pbr",
     "tracebot_bop_test",
+    "lmo_pbr_random_texture",
+    "lmo_pbr_random_texture_all",
+    "lmo_pbr_random_texture_no_bump",
+    "lmo_pbr_random_texture_no_displacement",
+    "lmo_3r_pbr",
+    "lmo_3r_1o_pbr",
+    "lmo_5r_pbr",
+    "lmo_5r_1o_pbr"
 ]
 
 logger = logging.getLogger(__name__)

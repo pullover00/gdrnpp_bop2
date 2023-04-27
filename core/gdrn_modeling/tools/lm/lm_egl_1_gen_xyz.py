@@ -46,7 +46,7 @@ IM_W = 640
 near = 0.01
 far = 6.5
 
-data_dir = osp.normpath(osp.join(PROJ_ROOT, "datasets/BOP_DATASETS/lm/train_egl"))
+data_dir = osp.normpath(osp.join(PROJ_ROOT, "datasets/BOP_DATASETS/lm/train_pbr"))
 
 cls_indexes = [_idx for _idx in sorted(idx2class.keys())]
 cls_names = [idx2class[cls_idx] for cls_idx in cls_indexes]
@@ -55,7 +55,8 @@ model_paths = [osp.join(lm_model_dir, f"obj_{cls_idx:06d}.ply") for cls_idx in c
 texture_paths = None
 
 xyz_root = osp.normpath(osp.join(data_dir, "xyz_crop"))
-gt_path = osp.join(data_dir, "gt.json")
+gt_path = osp.join(data_dir, "000000/scene_gt.json")
+print(gt_path)
 assert osp.exists(gt_path)
 
 K = np.array([[572.4114, 0, 325.2611], [0, 573.57043, 242.04899], [0, 0, 1]])
@@ -106,12 +107,13 @@ class XyzGen(object):
             for anno_i, anno in enumerate(annos):
                 obj_id = anno["obj_id"]
                 # read Pose
-                pose = np.array(anno["pose"])
+                #pose = np.array(anno["pose"])
                 save_path = osp.join(xyz_root, f"{int_im_id:06d}_{anno_i:06d}-xyz.pkl")
                 # if osp.exists(save_path) and osp.getsize(save_path) > 0:
                 #     continue
-                R = pose[:3, :3]
-                t = pose[:3, 3]
+                R = np.array(anno["cam_R_m2c"], dtype="float32").reshape(3, 3)
+                t = np.array(anno["cam_t_m2c"], dtype="float32") / 1000.0
+                pose = np.hstack([R, t.reshape(3, 1)])
 
                 K_th = torch.tensor(K, dtype=torch.float32, device=device)
                 R_th = torch.tensor(R, dtype=torch.float32, device=device)
@@ -121,7 +123,7 @@ class XyzGen(object):
                 render_obj_id = cls_indexes.index(obj_id)
                 self.get_renderer().render(
                     [render_obj_id],
-                    [pose],
+                    pose,
                     K=K,
                     image_tensor=self.image_tensor,
                     seg_tensor=self.seg_tensor,

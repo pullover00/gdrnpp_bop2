@@ -74,22 +74,28 @@ class GdrnPredictor():
 
         #set your trained object names
         self.objs = {
-                    1: "ape",
-                    #  2: 'benchvise',
-                    #  3: 'bowl',
-                    #  4: 'camera',
-                    5: "can",
-                    6: "cat",
-                    #  7: 'cup',
-                    8: "driller",
-                    9: "duck",
-                    10: "eggbox",
-                    11: "glue",
-                    12: "holepuncher",
-                    #  13: 'iron',
-                    #  14: 'lamp',
-                    #  15: 'phone'
-                }
+            1: "002_master_chef_can",  # [1.3360, -0.5000, 3.5105]
+            2: "003_cracker_box",  # [0.5575, 1.7005, 4.8050]
+            3: "004_sugar_box",  # [-0.9520, 1.4670, 4.3645]
+            4: "005_tomato_soup_can",  # [-0.0240, -1.5270, 8.4035]
+            5: "006_mustard_bottle",  # [1.2995, 2.4870, -11.8290]
+            6: "007_tuna_fish_can",  # [-0.1565, 0.1150, 4.2625]
+            7: "008_pudding_box",  # [1.1645, -4.2015, 3.1190]
+            8: "009_gelatin_box",  # [1.4460, -0.5915, 3.6085]
+            9: "010_potted_meat_can",  # [2.4195, 0.3075, 8.0715]
+            10: "011_banana",  # [-18.6730, 12.1915, -1.4635]
+            11: "019_pitcher_base",  # [5.3370, 5.8855, 25.6115]
+            12: "021_bleach_cleanser",  # [4.9290, -2.4800, -13.2920]
+            13: "024_bowl",  # [-0.2270, 0.7950, -2.9675]
+            14: "025_mug",  # [-8.4675, -0.6995, -1.6145]
+            15: "035_power_drill",  # [9.0710, 20.9360, -2.1190]
+            16: "036_wood_block",  # [1.4265, -2.5305, 17.1890]
+            17: "037_scissors",  # [7.0535, -28.1320, 0.0420]
+            18: "040_large_marker",  # [0.0460, -2.1040, 0.3500]
+            19: "051_large_clamp",  # [10.5180, -1.9640, -0.4745]
+            20: "052_extra_large_clamp",  # [-0.3950, -10.4130, 0.1620]
+            21: "061_foam_brick",  # [-0.0805, 0.0805, -8.2435]
+        }
 
         self.cls_names = [i for i in self.objs.values()]
         self.obj_ids = [i for i in self.objs.keys()]
@@ -97,9 +103,13 @@ class GdrnPredictor():
 
         with open(camera_json_path) as f:
             camera_json = json.load(f)
+            # self.cam = np.asarray([
+            #     [camera_json['fx'], 0., camera_json['cx']],
+            #     [0., camera_json['fy'], camera_json['cy']],
+            #     [0., 0., 1.]])
             self.cam = np.asarray([
-                [camera_json['fx'], 0., camera_json['cx']],
-                [0., camera_json['fy'], camera_json['cy']],
+                [606.6173706054688, 0., 322.375],
+                [0., 605.2778930664062, 232.67811584472656],
                 [0., 0., 1.]])
             self.depth_scale = camera_json['depth_scale']
 
@@ -193,8 +203,8 @@ class GdrnPredictor():
                     }
                 )
             data_dict["cur_res"].append(cur_res)
-        if self.cfg.TEST.USE_DEPTH_REFINE:
-            self.process_depth_refine(data_dict, out_dict)
+        #if self.cfg.TEST.USE_DEPTH_REFINE:
+        #    self.process_depth_refine(data_dict, out_dict)
 
         poses = {}
         for res in data_dict["cur_res"]:
@@ -332,9 +342,14 @@ class GdrnPredictor():
         if outputs is None:
             # TODO set default output
             return None
-        boxes = outputs[0].cpu()
 
-        for i in range(len(boxes)):
+        if len(outputs[0].size()) == 1:
+            #outputs[0].unsqueeze(0)
+            boxes = outputs[0].unsqueeze(0).cpu()
+        else:
+            boxes = outputs[0].cpu()
+        
+        for i in range(boxes.size()[0]):
             annot_inst = {}
             box = boxes[i].tolist()
             annot_inst["category_id"] = int(box[6])
@@ -387,8 +402,8 @@ class GdrnPredictor():
         for _key in roi_keys:
             roi_infos[_key] = []
 
-        for inst_i, inst_infos in enumerate(dataset_dict["annotations"]):
-            print(inst_infos["category_id"])
+        #for inst_i, inst_infos in enumerate(dataset_dict["annotations"]):
+        #    print(inst_infos["category_id"])
 
         for inst_i, inst_infos in enumerate(dataset_dict["annotations"]):
             # inherent image-level infos
@@ -598,7 +613,7 @@ class GdrnPredictor():
         # cfg.freeze()
         return cfg
 
-    def gdrn_visualization(self, batch, out_dict, image, frame_count=0):
+    def gdrn_visualization(self, batch, out_dict, image):
         vis_dict = {}
 
         # for crop and resize
@@ -635,7 +650,7 @@ class GdrnPredictor():
             R = batch["cur_res"][i]["R"]
             t = batch["cur_res"][i]["t"]
             # pose_est = np.hstack([R, t.reshape(3, 1)])
-            proj_pts_est = misc.project_pts(self.obj_models[8]["pts"], self.cam, R, t)
+            proj_pts_est = misc.project_pts(self.obj_models[i+1]["pts"], self.cam, R, t)
             mask_pose_est = misc.points2d_to_mask(proj_pts_est, im_H, im_W)
             image_mask_pose_est = vis_image_mask_cv2(image, mask_pose_est, color="yellow" if i == 0 else "blue")
             image_mask_pose_est = vis_image_bboxes_cv2(
@@ -645,5 +660,5 @@ class GdrnPredictor():
             )
             vis_dict[f"im_{i}_mask_pose_est"] = image_mask_pose_est[:, :, ::-1]
         show_ims = np.hstack([cv2.cvtColor(_v, cv2.COLOR_BGR2RGB) for _k, _v in vis_dict.items()])
-        cv2.imwrite('result.jpg', show_ims)
-        cv2.waitKey(0)
+        cv2.imshow('result', show_ims)
+        cv2.waitKey(1)
