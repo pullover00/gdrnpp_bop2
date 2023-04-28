@@ -4,7 +4,6 @@ import numpy as np
 import mmcv
 import itertools
 from einops import rearrange
-from lib.egl_renderer.egl_renderer_v3 import EGLRenderer
 from core.utils.camera_geometry import get_K_crop_resize
 from core.utils.data_utils import xyz_to_region_batch
 from lib.vis_utils.image import grid_show
@@ -268,6 +267,8 @@ def batch_data_inference_roi(cfg, data, device='cuda'):
 
 def get_renderer(cfg, data_ref, obj_names, gpu_id=None):
     """for rendering the targets (xyz) online."""
+    from lib.egl_renderer.egl_renderer_v3 import EGLRenderer
+    
     model_dir = data_ref.model_dir
 
     obj_ids = [data_ref.obj2id[_obj] for _obj in obj_names]
