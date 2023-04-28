@@ -25,8 +25,8 @@ import tf
 class GDRN_ROS:
     def __init__(self):
             self.gdrn_predictor = GdrnPredictor(
-                config_file_path=osp.join(PROJ_ROOT,"configs/gdrn/ycbv/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_ycbv.py"),
-                ckpt_file_path=osp.join(PROJ_ROOT,"output/gdrn/ycbv/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_ycbv/model_final_wo_optim.pth"),
+                config_file_path=osp.join(PROJ_ROOT,"configs/gdrn/ycbv/ycbv_inference.py"),
+                ckpt_file_path=osp.join(PROJ_ROOT,"output/gdrn/ycbv/gdrnpp_ycbv_weights.pth"),
                 camera_json_path=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/ycbv/camera_uw.json"),
                 path_to_obj_models=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/ycbv/models")
             )
