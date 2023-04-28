@@ -36,7 +36,6 @@ from lib.utils.time_utils import get_time_str
 import ref
 
 from core.gdrn_modeling.datasets.dataset_factory import register_datasets_in_cfg
-from core.gdrn_modeling.engine.engine_utils import get_renderer
 from core.gdrn_modeling.engine.engine import GDRN_Lite
 from core.gdrn_modeling.models import (
     GDRN,
@@ -148,6 +147,7 @@ class Lite(GDRN_Lite):
         if args.eval_only or cfg.TEST.SAVE_RESULTS_ONLY or (not cfg.MODEL.POSE_NET.XYZ_ONLINE):
             renderer = None
         else:
+            from core.gdrn_modeling.engine.engine_utils import get_renderer
             train_dset_meta = MetadataCatalog.get(cfg.DATASETS.TRAIN[0])
             data_ref = ref.__dict__[train_dset_meta.ref_key]
             train_obj_names = train_dset_meta.objs
