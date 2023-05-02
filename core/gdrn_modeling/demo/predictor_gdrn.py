@@ -113,7 +113,7 @@ class GdrnPredictor():
         #         [0., 605.2778930664062, 232.67811584472656],
         #         [0., 0., 1.]])
         self.cam = camera_intrinsics
-            self.depth_scale = 0.1
+        self.depth_scale = 0.1
 
         model_lite = Lite(
             accelerator="gpu",
