@@ -75,7 +75,7 @@ class GDRN_ROS:
         outputs = torch.tensor([float(detection.bbox.ymin), float(detection.bbox.xmin), float(detection.bbox.ymax), float(detection.bbox.xmax),  detection.score, detection.score, float(obj_id - 1)])
         outputs = list((outputs.unsqueeze(0)))
 
-        data_dict = self.gdrn_predictor.preprocessing(outputs=outputs, image=image, depth_img=depth_img)
+        data_dict = self.gdrn_predictor.preprocessing(outputs=outputs, image=image, depth_img=None)
         out_dict = self.gdrn_predictor.inference(data_dict)
         poses = self.gdrn_predictor.postprocessing(data_dict, out_dict)
         #self.gdrn_predictor.gdrn_visualization(batch=data_dict, out_dict=out_dict, image=image)
