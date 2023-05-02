@@ -98,7 +98,7 @@ class GDRN_ROS:
         br.sendTransform((poses[obj_name][0][3], poses[obj_name][1][3], poses[obj_name][2][3]),
                      rot_quat,
                      rospy.Time.now(),
-                     "pose",
+                     detection.name + "_pose",
                      "camera_color_optical_frame")
 
         estimates = []
