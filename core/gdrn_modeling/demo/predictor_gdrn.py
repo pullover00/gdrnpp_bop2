@@ -45,7 +45,8 @@ class GdrnPredictor():
     def __init__(self,
                  config_file_path=osp.join(PROJ_ROOT,"configs/gdrn/lmo_pbr/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_lmo.py"),
                  ckpt_file_path=osp.join(PROJ_ROOT,"output/gdrn/lmo_pbr/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_lmo/model_final.pth"),
-                 camera_json_path=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/camera.json"),
+                 #camera_json_path=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/camera.json"),
+                 camera_intrinsics=[],
                  path_to_obj_models=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/lmo/models")
                  ):
 
@@ -101,17 +102,18 @@ class GdrnPredictor():
         self.obj_ids = [i for i in self.objs.keys()]
         self.extents = self._get_extents()
 
-        with open(camera_json_path) as f:
-            camera_json = json.load(f)
-            # self.cam = np.asarray([
-            #     [camera_json['fx'], 0., camera_json['cx']],
-            #     [0., camera_json['fy'], camera_json['cy']],
-            #     [0., 0., 1.]])
-            self.cam = np.asarray([
-                [606.6173706054688, 0., 322.375],
-                [0., 605.2778930664062, 232.67811584472656],
-                [0., 0., 1.]])
-            self.depth_scale = camera_json['depth_scale']
+        # with open(camera_json_path) as f:
+        #     camera_json = json.load(f)
+        #     # self.cam = np.asarray([
+        #     #     [camera_json['fx'], 0., camera_json['cx']],
+        #     #     [0., camera_json['fy'], camera_json['cy']],
+        #     #     [0., 0., 1.]])
+        #     self.cam = np.asarray([
+        #         [606.6173706054688, 0., 322.375],
+        #         [0., 605.2778930664062, 232.67811584472656],
+        #         [0., 0., 1.]])
+        self.cam = camera_intrinsics
+            self.depth_scale = 0.1
 
         model_lite = Lite(
             accelerator="gpu",

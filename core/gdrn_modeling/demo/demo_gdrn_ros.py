@@ -24,10 +24,12 @@ import tf
 
 class GDRN_ROS:
     def __init__(self):
+            intrinsics = np.asarray(rospy.get_param('/pose_estimator/intrinsics'))
             self.gdrn_predictor = GdrnPredictor(
                 config_file_path=osp.join(PROJ_ROOT,"configs/gdrn/ycbv/ycbv_inference.py"),
                 ckpt_file_path=osp.join(PROJ_ROOT,"output/gdrn/ycbv/gdrnpp_ycbv_weights.pth"),
-                camera_json_path=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/ycbv/camera_uw.json"),
+                #camera_json_path=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/ycbv/camera_uw.json"),
+                camera_intrinsics=intrinsics,
                 path_to_obj_models=osp.join(PROJ_ROOT,"datasets/BOP_DATASETS/ycbv/models")
             )
 
