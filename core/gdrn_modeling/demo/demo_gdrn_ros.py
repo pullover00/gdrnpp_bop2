@@ -25,6 +25,7 @@ import tf
 class GDRN_ROS:
     def __init__(self):
             intrinsics = np.asarray(rospy.get_param('/pose_estimator/intrinsics'))
+            self.frame_id = rospy.get_param('/pose_estimator/color_frame_id')
             self.gdrn_predictor = GdrnPredictor(
                 config_file_path=osp.join(PROJ_ROOT,"configs/gdrn/ycbv/ycbv_inference.py"),
                 ckpt_file_path=osp.join(PROJ_ROOT,"output/gdrn/ycbv/gdrnpp_ycbv_weights.pth"),
@@ -99,7 +100,7 @@ class GDRN_ROS:
                      rot_quat,
                      rospy.Time.now(),
                      "pose",
-                     "camera_color_optical_frame")
+                     self.frame_id)
 
         estimates = []
         estimate = PoseWithConfidence()
