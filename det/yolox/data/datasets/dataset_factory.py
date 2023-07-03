@@ -25,10 +25,7 @@ from . import (
     itodd_bop_test,
     tracebot_pbr,
     tracebot_bop_test,
-    lmo_pbr_random_texture,
-    lmo_pbr_random_texture_all,
-    lmo_pbr_random_texture_no_bump,
-    lmo_pbr_random_texture_no_displacement,
+    lmo_random_texture_all_pbr,
 )  # noqa
 
 cur_dir = osp.dirname(osp.abspath(__file__))
@@ -63,10 +60,7 @@ _DSET_MOD_NAMES = [
     "itodd_bop_test",
     "tracebot_pbr",
     "tracebot_bop_test",
-    "lmo_pbr_random_texture",
-    "lmo_pbr_random_texture_all",
-    "lmo_pbr_random_texture_no_bump",
-    "lmo_pbr_random_texture_no_displacement",
+    "lmo_random_texture_all_pbr",
 ]
 
 logger = logging.getLogger(__name__)
