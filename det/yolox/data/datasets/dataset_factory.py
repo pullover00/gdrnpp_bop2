@@ -4,6 +4,7 @@ import mmcv
 from detectron2.data import DatasetCatalog
 from . import (
     lm_pbr,
+    lm_random_texture_all_pbr,
     lm_bop_test,
     lmo_bop_test,
     ycbv_pbr,
@@ -39,6 +40,7 @@ __all__ = [
 ]
 _DSET_MOD_NAMES = [
     "lm_pbr",
+    "lm_random_texture_all_pbr",
     "lm_bop_test",
     "lmo_bop_test",
     "ycbv_pbr",
