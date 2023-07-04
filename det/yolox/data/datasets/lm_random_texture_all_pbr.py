@@ -343,7 +343,7 @@ SPLITS_LM_PBR = dict(
         use_cache=True,
         num_to_load=-1,
         filter_invalid=True,
-        ref_key="lm_random_texture_all_pbr_train",
+        ref_key="lm_random_texture_all_full",
     ),
 )
 
