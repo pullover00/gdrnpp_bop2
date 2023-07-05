@@ -312,28 +312,12 @@ def get_lm_metadata(obj_names, ref_key):
 
 ##########################################################################
 
-LM_13_OBJECTS = [
-    "ape",
-    "benchvise",
-    "camera",
-    "can",
-    "cat",
-    "driller",
-    "duck",
-    "eggbox",
-    "glue",
-    "holepuncher",
-    "iron",
-    "lamp",
-    "phone",
-]  # no bowl, cup
-
 SPLITS_LM = dict(
     lm_bop_test=dict(
         name="lm_bop_test",
         dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/test"),
         models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/models"),
-        objs=LM_13_OBJECTS,
+        objs=ref.lm_full.objects,
         ann_file=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/test_targets_bop19.json"),
         scale_to_meter=0.001,
         with_masks=True,  # (load masks but may not use it)
@@ -365,7 +349,7 @@ for obj in ref.lm_full.objects:
                 name=name,
                 dataset_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/"),
                 models_root=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/models"),
-                objs=LM_13_OBJECTS,  # only this obj
+                objs=[obj],  # only this obj
                 scale_to_meter=0.001,
                 ann_file=osp.join(DATASETS_ROOT, "BOP_DATASETS/lm/test_targets_bop19.json"),
                 with_masks=True,  # (load masks but may not use it)
