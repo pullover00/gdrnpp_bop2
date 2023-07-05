@@ -25,7 +25,7 @@ model.head.num_classes = 15
 train.init_checkpoint = "pretrained_models/yolox/yolox_x.pth"
 
 # datasets
-DATASETS.TRAIN = ["lm_pbr_13_train"]
+DATASETS.TRAIN = ["lm_pbr_train"]
 DATASETS.TEST = ["lm_bop_test"]
 
 dataloader.train.dataset.lst.names = DATASETS.TRAIN
