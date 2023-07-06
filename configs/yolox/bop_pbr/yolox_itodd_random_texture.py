@@ -25,7 +25,7 @@ model.head.num_classes = 28
 train.init_checkpoint = "pretrained_models/yolox/yolox_x.pth"
 
 # datasets
-DATASETS.TRAIN = ["itodd_pbr_train"]
+DATASETS.TRAIN = ["itodd_random_texture_pbr_train"]
 DATASETS.TEST = ["itodd_bop_test"]
 
 dataloader.train.dataset.lst.names = DATASETS.TRAIN
