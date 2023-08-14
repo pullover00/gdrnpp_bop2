@@ -1,11 +1,17 @@
 import mmcv
 import sys
 from tqdm import tqdm
-
+import argparse
 import json
 
-path = "datasets/BOP_DATASETS/tless/test/test_bboxes/yolov4_tless_real_pbr.json"
-ds = mmcv.load(path)
+parser = argparse.ArgumentParser(description="convert det from bop format to ours")
+parser.add_argument("--ipath", type=str, default="0", help="input path")
+parser.add_argument("--opath", type=str, default="0", help="outpur path")
+args = parser.parse_args()
+
+args = parser.parse_args()
+
+ds = mmcv.load(args.ipath)
 
 outs = {}
 for d in tqdm(ds):
@@ -66,4 +72,4 @@ def save_json(path, content, sort=False):
             json.dump(content, f, sort_keys=True)
 
 
-save_json("datasets/BOP_DATASETS/tless/test/test_bboxes/yolov4_tless_real_pbr_bop.json", outs)
+save_json(args.opath, outs)

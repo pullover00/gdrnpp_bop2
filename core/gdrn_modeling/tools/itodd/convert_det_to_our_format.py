@@ -1,10 +1,16 @@
 import mmcv
 import sys
-
+import argparse
 import json
 
-path = "/data2/lxy/Storage/bop22_results/bbox_amodal/yolov4x_itodd_pbr-val.json"
-ds = mmcv.load(path)
+parser = argparse.ArgumentParser(description="convert det from bop format to ours")
+parser.add_argument("--ipath", type=str, default="0", help="input path")
+parser.add_argument("--opath", type=str, default="0", help="outpur path")
+args = parser.parse_args()
+
+args = parser.parse_args()
+
+ds = mmcv.load(args.ipath)
 
 outs = {}
 for d in ds:
@@ -65,4 +71,4 @@ def save_json(path, content, sort=False):
             json.dump(content, f, sort_keys=True)
 
 
-save_json("datasets/BOP_DATASETS/itodd/val/test_bboxes/yolov4x_amodal_itodd_pbr_val_bop.json", outs)
+save_json(args.opath, outs)

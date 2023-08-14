@@ -42,8 +42,9 @@ for d in ds:
     scene_im_id = f"{scene_id}/{image_id}"
 
     obj_id = d["category_id"]
-    obj_name = objects[obj_id - 1]
-    category_id = obj2id[obj_name]
+    #obj_name = objects[obj_id - 1]
+    #category_id = obj2id[obj_name]
+    category_id = obj_id
 
     score = d["score"]
 
