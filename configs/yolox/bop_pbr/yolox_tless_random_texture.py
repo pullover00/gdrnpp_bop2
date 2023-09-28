@@ -81,7 +81,7 @@ train.no_aug_epochs = 15
 train.checkpointer = dict(period=2, max_to_keep=10)
 
 test.test_dataset_names = DATASETS.TEST
-test.augment = True
+test.augment = False
 test.scales = (1, 0.75, 0.83, 1.12, 1.25)
 test.conf_thr = 0.001
 

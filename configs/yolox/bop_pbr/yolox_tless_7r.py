@@ -20,16 +20,16 @@ train.amp.enabled = True
 model.backbone.depth = 1.33
 model.backbone.width = 1.25
 
-model.head.num_classes = 8
+model.head.num_classes = 30
 
 train.init_checkpoint = "pretrained_models/yolox/yolox_x.pth"
 
 # datasets
-DATASETS.TRAIN = ["lmo_random_texture_all_pbr_train"]
-DATASETS.TEST = ["lmo_bop_test"]
+DATASETS.TRAIN = ["tless_7r_pbr_train"]
+DATASETS.TEST = ["tless_bop_test_primesense"]
 
 dataloader.train.dataset.lst.names = DATASETS.TRAIN
-dataloader.train.total_batch_size = 8
+dataloader.train.total_batch_size = 16
 
 # color aug
 dataloader.train.aug_wrapper.COLOR_AUG_PROB = 0.8

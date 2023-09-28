@@ -20,48 +20,50 @@ train.amp.enabled = True
 model.backbone.depth = 1.33
 model.backbone.width = 1.25
 
-model.head.num_classes = 8
+model.head.num_classes = 28
 
 train.init_checkpoint = "pretrained_models/yolox/yolox_x.pth"
 
 # datasets
-DATASETS.TRAIN = ["lmo_random_texture_all_pbr_train"]
-DATASETS.TEST = ["lmo_bop_test"]
+DATASETS.TRAIN = ["itodd_pbr_train"]
+DATASETS.TEST = ["itodd_bop_test"]
 
 dataloader.train.dataset.lst.names = DATASETS.TRAIN
-dataloader.train.total_batch_size = 8
+dataloader.train.total_batch_size = 16
 
-# color aug
-dataloader.train.aug_wrapper.COLOR_AUG_PROB = 0.8
-dataloader.train.aug_wrapper.COLOR_AUG_TYPE = "code"
-dataloader.train.aug_wrapper.COLOR_AUG_CODE = (
-    "Sequential(["
-    # Sometimes(0.5, PerspectiveTransform(0.05)),
-    # Sometimes(0.5, CropAndPad(percent=(-0.05, 0.1))),
-    # Sometimes(0.5, Affine(scale=(1.0, 1.2))),
-    "Sometimes(0.5, CoarseDropout( p=0.2, size_percent=0.05) ),"
-    "Sometimes(0.4, GaussianBlur((0., 3.))),"
-    "Sometimes(0.3, pillike.EnhanceSharpness(factor=(0., 50.))),"
-    "Sometimes(0.3, pillike.EnhanceContrast(factor=(0.2, 50.))),"
-    "Sometimes(0.5, pillike.EnhanceBrightness(factor=(0.1, 6.))),"
-    "Sometimes(0.3, pillike.EnhanceColor(factor=(0., 20.))),"
-    "Sometimes(0.5, Add((-25, 25), per_channel=0.3)),"
-    "Sometimes(0.3, Invert(0.2, per_channel=True)),"
-    "Sometimes(0.5, Multiply((0.6, 1.4), per_channel=0.5)),"
-    "Sometimes(0.5, Multiply((0.6, 1.4))),"
-    "Sometimes(0.1, AdditiveGaussianNoise(scale=10, per_channel=True)),"
-    "Sometimes(0.5, iaa.contrast.LinearContrast((0.5, 2.2), per_channel=0.3)),"
-    # "Sometimes(0.5, Grayscale(alpha=(0.0, 1.0))),"  # maybe remove for det
-    "], random_order=True)"
-    # cosy+aae
-)
+dataloader.train.aug_wrapper = None
 
-# hsv color aug
-dataloader.train.aug_wrapper.AUG_HSV_PROB = 1.0
-dataloader.train.aug_wrapper.HSV_H = 0.015
-dataloader.train.aug_wrapper.HSV_S = 0.7
-dataloader.train.aug_wrapper.HSV_V = 0.4
-dataloader.train.aug_wrapper.FORMAT = "RGB"
+# # color aug
+# dataloader.train.aug_wrapper.COLOR_AUG_PROB = 0.8
+# dataloader.train.aug_wrapper.COLOR_AUG_TYPE = "code"
+# dataloader.train.aug_wrapper.COLOR_AUG_CODE = (
+#     "Sequential(["
+#     # Sometimes(0.5, PerspectiveTransform(0.05)),
+#     # Sometimes(0.5, CropAndPad(percent=(-0.05, 0.1))),
+#     # Sometimes(0.5, Affine(scale=(1.0, 1.2))),
+#     "Sometimes(0.5, CoarseDropout( p=0.2, size_percent=0.05) ),"
+#     "Sometimes(0.4, GaussianBlur((0., 3.))),"
+#     "Sometimes(0.3, pillike.EnhanceSharpness(factor=(0., 50.))),"
+#     "Sometimes(0.3, pillike.EnhanceContrast(factor=(0.2, 50.))),"
+#     "Sometimes(0.5, pillike.EnhanceBrightness(factor=(0.1, 6.))),"
+#     "Sometimes(0.3, pillike.EnhanceColor(factor=(0., 20.))),"
+#     "Sometimes(0.5, Add((-25, 25), per_channel=0.3)),"
+#     "Sometimes(0.3, Invert(0.2, per_channel=True)),"
+#     "Sometimes(0.5, Multiply((0.6, 1.4), per_channel=0.5)),"
+#     "Sometimes(0.5, Multiply((0.6, 1.4))),"
+#     "Sometimes(0.1, AdditiveGaussianNoise(scale=10, per_channel=True)),"
+#     "Sometimes(0.5, iaa.contrast.LinearContrast((0.5, 2.2), per_channel=0.3)),"
+#     # "Sometimes(0.5, Grayscale(alpha=(0.0, 1.0))),"  # maybe remove for det
+#     "], random_order=True)"
+#     # cosy+aae
+# )
+
+# # hsv color aug
+# dataloader.train.aug_wrapper.AUG_HSV_PROB = 1.0
+# dataloader.train.aug_wrapper.HSV_H = 0.015
+# dataloader.train.aug_wrapper.HSV_S = 0.7
+# dataloader.train.aug_wrapper.HSV_V = 0.4
+# dataloader.train.aug_wrapper.FORMAT = "RGB"
 
 optimizer = L(Ranger)(
     params=L(get_default_optimizer_params)(
@@ -81,7 +83,7 @@ train.no_aug_epochs = 15
 train.checkpointer = dict(period=2, max_to_keep=10)
 
 test.test_dataset_names = DATASETS.TEST
-test.augment = False
+test.augment = True
 test.scales = (1, 0.75, 0.83, 1.12, 1.25)
 test.conf_thr = 0.001
 

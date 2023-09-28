@@ -29,7 +29,7 @@ DATASETS.TRAIN = ["tless_pbr_train"]
 DATASETS.TEST = ["tless_bop_test_primesense"]
 
 dataloader.train.dataset.lst.names = DATASETS.TRAIN
-dataloader.train.total_batch_size = 32
+dataloader.train.total_batch_size = 16
 
 # color aug
 dataloader.train.aug_wrapper.COLOR_AUG_PROB = 0.8
@@ -81,7 +81,7 @@ train.no_aug_epochs = 15
 train.checkpointer = dict(period=2, max_to_keep=10)
 
 test.test_dataset_names = DATASETS.TEST
-test.augment = True
+test.augment = False
 test.scales = (1, 0.75, 0.83, 1.12, 1.25)
 test.conf_thr = 0.001
 
