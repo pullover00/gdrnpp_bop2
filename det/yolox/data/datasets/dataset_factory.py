@@ -75,6 +75,9 @@ _DSET_MOD_NAMES = [
     "itodd_bop_test",
     "tracebot_pbr",
     "tracebot_bop_test",
+    "lmo_3r_pbr",
+    "lmo_5r_pbr",
+    "lmo_7r_pbr",
     "lmo_random_texture_all_pbr",
 ]
 
