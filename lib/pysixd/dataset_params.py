@@ -92,6 +92,7 @@ def get_model_params(datasets_path, dataset_name, model_type=None):
         "ycbvposecnn": list(range(1, 22)),
         "hope": list(range(1, 29)),
         "tracebot": list(range(1,9)),
+        "trans6D": list(range(1,11))
     }[dataset_name]
 
     # ID's of objects with ambiguous views evaluated using the ADI pose error
@@ -131,6 +132,7 @@ def get_model_params(datasets_path, dataset_name, model_type=None):
         "ycbvposecnn": [13, 16, 19, 20, 21],  # posecnn symmetric objs
         "hope": None,  # Not defined yet.
         "tracebot": None,
+        "trans6D": None,
     }[dataset_name]
 
     # T-LESS includes two types of object models, CAD and reconstructed.
@@ -404,6 +406,11 @@ def get_split_params(datasets_path, dataset_name, split, split_type=None):
         #p['scene_ids'] = list(range(22,68))
         p['scene_ids'] = {'train': list(range(31))+list(range(32,49)), 'test': list(range(49,68))}[split]
         p['im_size'] = (1280, 720)
+
+    elif dataset_name == 'trans6D':
+        #p['scene_ids'] = list(range(22,68))
+        p['scene_ids'] = {'train': list(range(1,11)), 'test': list(range(1,11))}[split]
+        p['im_size'] = (640, 480)
 
     elif dataset_name == 'tracebot_real':
         p['scene_ids'] = [1,2,3,4,8,9,10,11,12,13,14,16,17,18,19,20,21,22,23]

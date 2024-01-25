@@ -6,5 +6,5 @@ docker run \
 --gpus all \
 -it \
 --shm-size=8gb --env="DISPLAY" \
---volume="/home/peter/gdrnpp_bop2022:/gdrnpp_bop2022" \
---name=gdrnppv0 gdrnpp
+--volume="/home/tessa/gdrnpp_bop2022:/gdrn" \
+--name=gdrn_tessa gdrn

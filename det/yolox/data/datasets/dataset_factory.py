@@ -35,6 +35,8 @@ from . import (
     lmo_5r_pbr,
     lmo_7r_pbr,
     lmo_random_texture_all_pbr,
+    trans6d_pbr,
+    trans6d_test
 )  # noqa
 
 cur_dir = osp.dirname(osp.abspath(__file__))
@@ -79,6 +81,8 @@ _DSET_MOD_NAMES = [
     "lmo_5r_pbr",
     "lmo_7r_pbr",
     "lmo_random_texture_all_pbr",
+    "trans6d_pbr",
+    "trans6d_test"
 ]
 
 logger = logging.getLogger(__name__)

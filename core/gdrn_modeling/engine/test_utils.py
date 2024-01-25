@@ -152,7 +152,8 @@ def get_data_ref(dataset_name):
         "hb": "hb",
         "hbs": "hb_bop19",
         "itodd": "itodd",
-        "tracebot": "tracebot"
+        "tracebot": "tracebot",
+        "trans6D": "trans6D"
     }
     ref_key = ref_key_dict[dataset_name]
     return ref.__dict__[ref_key]
@@ -363,6 +364,7 @@ def load_and_print_val_scores_tab(
         "ycbv": 15,
         "ycbvposecnn": 15,
         "tracebot": 15,
+        "trans6D": 15,
     }
     ntop = cfg.VAL.N_TOP
     val_dataset_name = cfg.VAL.DATASET_NAME
