@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # GDRNPP for BOP2022
 
 This repo provides code and models for GDRNPP_BOP2022, **winner (most of the awards) of the BOP Challenge 2022 at ECCV'22 [[slides](http://cmp.felk.cvut.cz/sixd/workshop_2022/slides/bop_challenge_2022_results.pdf)]**.
@@ -115,3 +116,6 @@ If you use GDRNPP in your research, please use the following BibTeX entries.
 }
 ```
 
+=======
+# gdrnpp_bop2
+>>>>>>> c0931d4b6ffe3aa02b888db7586ca0b9277f1175
